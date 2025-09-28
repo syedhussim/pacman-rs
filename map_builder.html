@@ -1,0 +1,172 @@
+<html>
+    <head>
+        <style>
+            body {
+                display: flex;
+                background-color: #000;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 18px;
+            }
+            .row {
+                display: flex;
+            }
+            .column {
+                display: flex;
+                width:30px;
+                height:30px;
+                border:1px solid #333;
+                justify-content: center;
+                align-items: center;
+                font-size: 20px;
+            }
+            .wall {}
+            .wall::before { content: "\01F9F1";}
+            .ghost {}
+            .ghost::before{ content: "\01F47B"; }
+            .cherry {}
+            .cherry::before{ content: "\01F352"; }
+            .rock{}
+            .rock::before { content: "\01FAA8"; }
+            .bomb{}
+            .bomb::before { content: "\01F4A3"; }
+            .diamond {}
+            .diamond::before { content : "\01F538"; }
+            .power {}
+            .power::before { content: "\01F31F"; }
+
+            .field-row { 
+                display: flex;
+                flex-direction: column;
+                width: 400px;
+                margin-bottom: 10px;
+                margin-left: 20px;
+                color:#fff;
+            }
+            select,button,textarea {
+                padding:10px;
+                resize: none;
+                border:1px solid #333;
+                background-color: transparent;
+                outline: none;
+                color:#fff;
+                font-family: inherit;
+                font-size: inherit;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div>
+            <div class="field-row">
+                <select id="entity">
+                    <option value="wall" selected>Wall</option>
+                    <option value="ghost">Ghost</option>
+                    <option value="cherry">Cherry</option>
+                    <option value="rock">Rock</option>
+                    <option value="bomb">Bomb</option>
+                    <option value="diamond">Diamond</option>
+                    <option value="power">Power</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <textarea id="output" rows="20" cols="=30"></textarea>
+            </div>
+            <div class="field-row">
+                <button onclick="loadMap()">Load Map</button>
+            </div>
+        </div>
+        
+
+        <script type="text/javascript">
+
+            let map_positions = new Map();
+
+            function init(mapDataArray = null){
+
+                document.querySelector("#map").replaceChildren();
+                let output = document.querySelector("#output");
+                output.value = '';
+                
+                let map = [];
+
+                for (let r=0; r <30; r++){
+
+                    let row = document.createElement("div");
+                    row.className = "row";
+
+                    for (let c=0; c <30; c++){
+
+                        let column = document.createElement("div");
+                        column.classList.add("column");
+
+                        if(mapDataArray){
+                            let lookup = `${r+1},${(c * 2) + 1}`;
+
+                            if(mapDataArray.has(lookup)){
+                                let entity = mapDataArray.get(lookup);
+                                column.classList.add(entity);
+
+                                let value = { entity : entity, row : r + 1, column : (c * 2) + 1};
+                                let key = value.row + '_' + value.column;
+
+                                if (map_positions.has(key)){
+                                    map_positions.delete(key);
+                                }else{
+                                    map_positions.set(key, value);
+                                }
+                            }
+                        }else{
+                            column.classList.add("diamond");
+                            let value = { entity : "diamond", row : r + 1, column : (c * 2) + 1};
+                            let key = value.row + '_' + value.column;
+                            map_positions.set(key, value);
+                        }
+                        
+                        column.addEventListener("click", () => {
+                            let entity = document.querySelector("#entity").value;
+                            output.value = '';
+                            
+                            let value = { entity : entity, row : r + 1, column : (c * 2) + 1};
+                            let key = value.row + '_' + value.column;
+
+                            column.className = "column " + entity;
+                            
+                            if (map_positions.has(key)){
+                                map_positions.delete(key);
+                            }else{
+                                map_positions.set(key, value);
+                            }
+                            for (let [k, v] of map_positions.entries()){
+                                output.value += `${v.entity},${v.row},${v.column}\n`;
+                            }
+                        })
+                        row.appendChild(column);
+                    }
+
+                    document.querySelector("#map").appendChild(row);
+                }
+            }
+
+            function loadMap(){
+                let mapData = document.querySelector("#output").value;
+
+                
+                let mapDataArray = new Map();
+
+                let lines = mapData.split("\n");
+
+                for(let line of lines){
+                    let cols = line.split(",");
+
+                    let key = `${cols[1]},${cols[2]}`;      
+                    mapDataArray.set(key, cols[0]);
+                }
+
+                init(mapDataArray)
+            }
+
+            init();
+        </script>
+    </body>
+</html>
